@@ -1,0 +1,30 @@
+#!/bin/sh
+# Lance la suite de tests backend avant chaque commit.
+# Pour ignorer ce hook ponctuellement (WIP, commit intermédiaire) : git commit --no-verify
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT/backend" || exit 1
+
+echo "Lancement des tests backend avant commit..."
+
+if [ -f "venv/Scripts/python.exe" ]; then
+    PYTHON="venv/Scripts/python.exe"
+elif [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+else
+    echo "⚠️  Environnement virtuel introuvable (backend/venv) — tests ignorés."
+    exit 0
+fi
+
+"$PYTHON" manage.py test prospects
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+    echo ""
+    echo "❌ Des tests ont échoué. Commit annulé."
+    echo "   Pour forcer le commit malgré tout : git commit --no-verify"
+    exit 1
+fi
+
+echo "✅ Tests backend OK."
+exit 0
