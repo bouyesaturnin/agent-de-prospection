@@ -1,0 +1,21 @@
+# Environnement virtuel
+venv/
+env/
+.venv/
+
+# Variables d'environnement / secrets
+.env
+
+# Django
+db.sqlite3
+*.pyc
+__pycache__/
+staticfiles/
+media/
+
+# Celery
+celerybeat-schedule*
+
+# Éditeurs
+.vscode/
+.idea/

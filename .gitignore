@@ -1,0 +1,5 @@
+# Fichiers d'OS / éditeurs (les .gitignore de backend/ et frontend/ couvrent le reste)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
