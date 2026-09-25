@@ -3,6 +3,7 @@ import io
 import socket
 from urllib.parse import urlparse
 
+import requests
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.http import require_GET
@@ -12,15 +13,17 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from .models import Campaign, Lead, Message, AgentLog
+from .models import Campaign, Lead, Message, AgentLog, DiscoveredProspect
 from .serializers import (
     CampaignSerializer,
     LeadSerializer,
     MessageSerializer,
     AgentLogSerializer,
+    DiscoveredProspectSerializer,
 )
 from .services.reply_checker import check_replies
 from .services.followup_manager import process_followups
+from .services.prospect_finder import search_businesses_without_website
 from .tasks import task_generate_ai_message, task_send_message
 
 
@@ -257,6 +260,87 @@ class MessageViewSet(viewsets.ModelViewSet):
             return error
 
         return Response({'status': "Envoi en cours en arrière-plan"}, status=status.HTTP_202_ACCEPTED)
+
+
+class DiscoveredProspectViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint pour la recherche automatique de prospects (entreprises sans
+    site web, via Google Places) et leur conversion en vrais Leads une fois
+    l'email complété manuellement.
+    """
+    queryset = DiscoveredProspect.objects.all()
+    serializer_class = DiscoveredProspectSerializer
+    filterset_fields = ['status', 'category', 'search_location']
+
+    @action(detail=False, methods=['post'])
+    def search(self, request):
+        """
+        Lance une recherche Google Places pour '{query} à {location}' et
+        enregistre les établissements sans site web trouvés (exécution
+        synchrone : utile pour un bouton "Rechercher" côté UI).
+        """
+        query = (request.data.get('query') or '').strip()
+        location = (request.data.get('location') or '').strip()
+        if not query:
+            return Response({'detail': "Le champ 'query' est requis (ex: 'restaurant')."}, status=400)
+
+        try:
+            result = search_businesses_without_website(query, location)
+        except ValueError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except requests.HTTPError as exc:
+            return Response(
+                {'detail': f"Erreur de l'API Google Places : {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except requests.RequestException as exc:
+            return Response(
+                {'detail': f"Impossible de contacter l'API Google Places : {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def convert(self, request, pk=None):
+        """
+        Convertit un prospect découvert (email complété) en vrai Lead exploitable
+        par l'agent, optionnellement rattaché à une campagne.
+        """
+        prospect = self.get_object()
+
+        if not prospect.email:
+            return Response({'detail': "Renseigne un email avant de convertir ce prospect."}, status=400)
+
+        if prospect.status == 'CONVERTED' and prospect.converted_lead_id:
+            return Response({'detail': "Ce prospect a déjà été converti."}, status=400)
+
+        if Lead.objects.filter(email=prospect.email).exists():
+            return Response({'detail': "Un prospect avec cet email existe déjà."}, status=400)
+
+        campaign = None
+        campaign_id = request.data.get('campaign')
+        if campaign_id:
+            campaign = Campaign.objects.filter(id=campaign_id).first()
+            if campaign is None:
+                return Response({'detail': "Campagne introuvable."}, status=400)
+
+        name_parts = prospect.name.split(' ', 1)
+        lead = Lead.objects.create(
+            email=prospect.email,
+            first_name=name_parts[0] if name_parts else '',
+            company=prospect.name,
+            phone=prospect.phone,
+            notes=f"Découvert via recherche Google Places ({prospect.category} — {prospect.search_location}). "
+                  f"Adresse : {prospect.address}",
+            campaign=campaign,
+        )
+
+        prospect.status = 'CONVERTED'
+        prospect.converted_lead = lead
+        prospect.save(update_fields=['status', 'converted_lead'])
+
+        return Response(LeadSerializer(lead).data, status=status.HTTP_201_CREATED)
 
 
 class AgentLogViewSet(viewsets.ReadOnlyModelViewSet):

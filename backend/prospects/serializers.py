@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Campaign, Lead, Message, AgentLog
+from .models import Campaign, Lead, Message, AgentLog, DiscoveredProspect
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -33,3 +33,12 @@ class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = '__all__'
+
+
+class DiscoveredProspectSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = DiscoveredProspect
+        fields = '__all__'
+        read_only_fields = ['google_place_id', 'name', 'address', 'phone', 'category', 'search_location', 'converted_lead']

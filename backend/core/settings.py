@@ -196,6 +196,11 @@ IMAP_PORT = int(os.getenv('IMAP_PORT', '993'))
 IMAP_USERNAME = os.getenv('IMAP_USERNAME', '')
 IMAP_PASSWORD = os.getenv('IMAP_PASSWORD', '')
 IMAP_MAILBOX = os.getenv('IMAP_MAILBOX', 'INBOX')
+
+# Recherche automatique de prospects sans site web (Google Places API - New)
+# https://console.cloud.google.com/google/maps-apis/credentials
+GOOGLE_PLACES_API_KEY = os.getenv('GOOGLE_PLACES_API_KEY', '')
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

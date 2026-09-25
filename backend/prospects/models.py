@@ -178,6 +178,46 @@ class AgentLog(models.Model):
         return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {self.action} - {self.level}"
 
 
+class DiscoveredProspect(models.Model):
+    """
+    Résultat brut d'une recherche automatique (Google Places) : une entreprise
+    sans site web détectée, en attente qu'un email lui soit associé à la main
+    avant de pouvoir devenir un vrai Lead exploitable par l'agent.
+    """
+    STATUS_CHOICES = [
+        ('NEW', 'À qualifier'),
+        ('CONVERTED', 'Converti en prospect'),
+        ('DISCARDED', 'Écarté'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    google_place_id = models.CharField(max_length=255, unique=True)
+
+    name = models.CharField(max_length=255, verbose_name="Nom de l'entreprise")
+    address = models.CharField(max_length=500, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    category = models.CharField(max_length=150, blank=True, help_text="Terme de recherche utilisé, ex: 'restaurant'")
+    search_location = models.CharField(max_length=150, blank=True, help_text="Ville/zone utilisée pour la recherche")
+
+    email = models.EmailField(blank=True, verbose_name="Email (à compléter manuellement)")
+    notes = models.TextField(blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
+    converted_lead = models.ForeignKey(
+        Lead, on_delete=models.SET_NULL, null=True, blank=True, related_name='discovery_source'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Prospect découvert"
+        verbose_name_plural = "Prospects découverts"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
+
+
 class ImapSyncState(models.Model):
     """
     Retient le dernier UID IMAP traité pour une boîte donnée, afin que le relevé

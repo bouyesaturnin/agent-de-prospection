@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
+import ProspectFinder from './pages/ProspectFinder';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="campaigns" element={<Campaigns />} />
+              <Route path="discovery" element={<ProspectFinder />} />
             </Route>
           </Route>
         </Routes>

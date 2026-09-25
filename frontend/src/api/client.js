@@ -71,4 +71,13 @@ export const sendMessage = (messageId) => apiClient.post(`/messages/${messageId}
 // Journaux
 export const getLogs = (params) => apiClient.get('/logs/', { params });
 
+// Recherche de prospects (Google Places)
+export const getDiscoveredProspects = (params) => apiClient.get('/discovered-prospects/', { params });
+export const searchProspects = (query, location) =>
+  apiClient.post('/discovered-prospects/search/', { query, location });
+export const updateDiscoveredProspect = (id, payload) =>
+  apiClient.patch(`/discovered-prospects/${id}/`, payload);
+export const convertDiscoveredProspect = (id, campaignId) =>
+  apiClient.post(`/discovered-prospects/${id}/convert/`, campaignId ? { campaign: campaignId } : {});
+
 export default apiClient;
