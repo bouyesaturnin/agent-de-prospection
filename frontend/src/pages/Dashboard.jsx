@@ -36,6 +36,9 @@ const STATUS_OPTIONS = [
   { value: 'BOUNCED', label: 'Email invalide' },
 ];
 
+const GENERATE_POLL_INTERVAL_MS = 2000;
+const GENERATE_POLL_MAX_ATTEMPTS = 10; // ~20s : la génération prend en général 3-5s
+
 function initials(lead) {
   const a = lead.first_name?.[0] || lead.email?.[0] || '?';
   const b = lead.last_name?.[0] || '';
@@ -74,12 +77,15 @@ export default function Dashboard() {
       if (campaignFilter) params.campaign = campaignFilter;
       const response = await getLeads(params);
       const data = response.data;
-      setLeads(data.results ?? data);
-      setLeadsCount(data.count ?? (data.results ?? data).length);
+      const results = data.results ?? data;
+      setLeads(results);
+      setLeadsCount(data.count ?? results.length);
       setErrorMsg('');
+      return results;
     } catch (error) {
       console.error('Erreur lors du chargement des prospects :', error);
       setErrorMsg("Impossible de contacter l'API. Vérifie que le serveur Django tourne bien.");
+      return [];
     } finally {
       setLoadingLeads(false);
     }
@@ -116,10 +122,22 @@ export default function Dashboard() {
   }, [fetchCampaigns, fetchLogs]);
 
   const handleGenerateAi = async (leadId) => {
+    const previousStatus = leads.find((l) => l.id === leadId)?.status;
     try {
       setGeneratingId(leadId);
       await generateAiMessage(leadId);
-      await fetchLeads();
+
+      // La génération tourne en arrière-plan (Celery, ~3-5s) : on interroge le
+      // serveur à intervalles réguliers jusqu'à voir le statut du prospect
+      // changer, plutôt que de rafraîchir une seule fois trop tôt.
+      for (let attempt = 0; attempt < GENERATE_POLL_MAX_ATTEMPTS; attempt++) {
+        const results = await fetchLeads();
+        const updated = results.find((l) => l.id === leadId);
+        if (updated && updated.status !== previousStatus) break;
+        if (attempt < GENERATE_POLL_MAX_ATTEMPTS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, GENERATE_POLL_INTERVAL_MS));
+        }
+      }
       await fetchLogs();
     } catch (error) {
       console.error(error);

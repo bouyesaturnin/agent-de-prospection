@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Mail,
   Building2,
@@ -25,12 +25,29 @@ const MESSAGE_STATUS_LABEL = {
   RECEIVED: 'Réponse reçue',
 };
 
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_ATTEMPTS = 10; // ~20s : la génération prend en général 3-5s
+
 export default function LeadDetailModal({ open, onClose, lead, campaignName, onEdit, onChanged }) {
   const [deleting, setDeleting] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generateTimedOut, setGenerateTimedOut] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [sendingId, setSendingId] = useState(null);
   const [sendError, setSendError] = useState('');
+
+  const messageCountBeforeGenerate = useRef(0);
+  const messageArrivedRef = useRef(false);
+
+  // Dès que le nombre de messages augmente pendant une génération en cours, on
+  // sait que le brouillon est arrivé : on arrête le spinner tout seul, sans
+  // attendre le prochain rafraîchissement manuel.
+  useEffect(() => {
+    if (generating && (lead?.messages?.length || 0) > messageCountBeforeGenerate.current) {
+      messageArrivedRef.current = true;
+      setGenerating(false);
+    }
+  }, [lead?.messages?.length, generating]);
 
   if (!lead) return null;
 
@@ -47,12 +64,29 @@ export default function LeadDetailModal({ open, onClose, lead, campaignName, onE
   };
 
   const handleGenerate = async () => {
+    messageCountBeforeGenerate.current = lead.messages?.length || 0;
+    messageArrivedRef.current = false;
     setGenerating(true);
+    setGenerateTimedOut(false);
     try {
       await generateAiMessage(lead.id);
-      onChanged();
-    } finally {
+    } catch {
       setGenerating(false);
+      return;
+    }
+
+    // La génération tourne en arrière-plan (Celery, ~3-5s) : on interroge le
+    // serveur à intervalles réguliers jusqu'à voir apparaître le nouveau
+    // message (détecté par l'effet ci-dessus), plutôt que de rafraîchir une
+    // seule fois trop tôt.
+    for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
+      if (messageArrivedRef.current) return;
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      await onChanged();
+    }
+    if (!messageArrivedRef.current) {
+      setGenerating(false);
+      setGenerateTimedOut(true);
     }
   };
 
@@ -119,9 +153,17 @@ export default function LeadDetailModal({ open, onClose, lead, campaignName, onE
               className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              Générer un message IA
+              {generating ? 'Génération en cours...' : 'Générer un message IA'}
             </button>
           </div>
+
+          {generateTimedOut && (
+            <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              La génération prend plus de temps que prévu. Elle est peut-être toujours en cours — réessaie de
+              rouvrir cette fiche dans quelques instants.
+            </p>
+          )}
 
           {sendError && (
             <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
