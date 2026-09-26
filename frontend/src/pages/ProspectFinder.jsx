@@ -63,6 +63,11 @@ export default function ProspectFinder() {
       .catch(() => {});
   }, []);
 
+  // Sans campagne, l'IA n'a aucune instruction (argument prix/délai/offre) et
+  // génère un message générique : on présélectionne la campagne active pour
+  // qu'un oubli de clic ne produise plus un email sans argumentaire.
+  const defaultCampaignId = campaigns.find((c) => c.status === 'ACTIVE')?.id || '';
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -99,7 +104,8 @@ export default function ProspectFinder() {
       if (email !== prospect.email) {
         await updateDiscoveredProspect(prospect.id, { email });
       }
-      await convertDiscoveredProspect(prospect.id, campaignChoice[prospect.id] || null);
+      const campaignId = campaignChoice[prospect.id] ?? defaultCampaignId;
+      await convertDiscoveredProspect(prospect.id, campaignId || null);
       setInfoMsg(`${prospect.name} converti en prospect.`);
       await fetchProspects();
     } catch (error) {
@@ -237,7 +243,7 @@ export default function ProspectFinder() {
                       className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     />
                     <select
-                      value={campaignChoice[p.id] || ''}
+                      value={campaignChoice[p.id] ?? defaultCampaignId}
                       onChange={(e) => setCampaignChoice((c) => ({ ...c, [p.id]: e.target.value }))}
                       className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs outline-none focus:border-brand-400"
                     >
