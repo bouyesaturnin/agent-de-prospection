@@ -67,6 +67,7 @@ export const pauseCampaign = (campaignId) => apiClient.post(`/campaigns/${campai
 
 // Messages
 export const sendMessage = (messageId) => apiClient.post(`/messages/${messageId}/send/`);
+export const updateMessage = (messageId, payload) => apiClient.patch(`/messages/${messageId}/`, payload);
 
 // Journaux
 export const getLogs = (params) => apiClient.get('/logs/', { params });
