@@ -6,8 +6,10 @@ en brouillon.
 
 ## En ligne
 
-- **Application** : https://frontend-puce-two-67.vercel.app
-- **API** : https://backend-web-production-74ff.up.railway.app/api/
+- **Application** : https://mailagent-ia.eu
+- **API** : https://api.mailagent-ia.eu/api/
+
+(Domaines par défaut, toujours actifs en secours : https://frontend-puce-two-67.vercel.app et https://backend-web-production-74ff.up.railway.app)
 
 ## Stack
 
