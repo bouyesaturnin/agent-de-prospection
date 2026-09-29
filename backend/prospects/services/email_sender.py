@@ -54,6 +54,11 @@ def send_message_via_brevo(message: Message) -> None:
         "subject": message.subject or "Prise de contact",
         "textContent": message.body + _unsubscribe_footer(lead),
     }
+    # Les réponses doivent atterrir dans la boîte surveillée par l'IMAP
+    # (reply_checker), pas dans l'adresse d'expédition @mailagent-ia.eu qui
+    # n'a pas de boîte de réception.
+    if settings.IMAP_USERNAME:
+        payload["replyTo"] = {"email": settings.IMAP_USERNAME}
 
     response = requests.post(
         BREVO_API_URL,

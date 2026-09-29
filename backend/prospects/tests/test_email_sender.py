@@ -50,6 +50,26 @@ class SendMessageViaBrevoTests(TestCase):
         sent_payload = mock_post.call_args.kwargs['json']
         self.assertIn(f"/api/unsubscribe/{self.lead.id}/", sent_payload['textContent'])
 
+    @override_settings(IMAP_USERNAME='inbox@example.com')
+    @patch('prospects.services.email_sender.requests.post')
+    def test_reply_to_points_to_monitored_mailbox(self, mock_post):
+        mock_post.return_value = fake_response(201)
+
+        send_message_via_brevo(self.message)
+
+        sent_payload = mock_post.call_args.kwargs['json']
+        self.assertEqual(sent_payload['replyTo'], {'email': 'inbox@example.com'})
+
+    @override_settings(IMAP_USERNAME='')
+    @patch('prospects.services.email_sender.requests.post')
+    def test_no_reply_to_when_imap_not_configured(self, mock_post):
+        mock_post.return_value = fake_response(201)
+
+        send_message_via_brevo(self.message)
+
+        sent_payload = mock_post.call_args.kwargs['json']
+        self.assertNotIn('replyTo', sent_payload)
+
     @patch('prospects.services.email_sender.requests.post')
     def test_unsubscribed_lead_blocks_send_without_api_call(self, mock_post):
         self.lead.unsubscribed = True
