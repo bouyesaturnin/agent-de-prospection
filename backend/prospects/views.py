@@ -1,12 +1,14 @@
 import csv
 import io
+import json
 import socket
 from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
-from django.http import HttpResponse
-from django.views.decorators.http import require_GET
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from kombu.exceptions import OperationalError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -24,6 +26,7 @@ from .serializers import (
 from .services.reply_checker import check_replies
 from .services.followup_manager import process_followups
 from .services.prospect_finder import search_businesses_without_website
+from .services.bounce_handler import process_bounce_event
 from .tasks import task_generate_ai_message, task_send_message
 
 
@@ -375,3 +378,25 @@ def unsubscribe_view(request, lead_id):
         "<p>Vous ne recevrez plus de messages de notre part. Vous pouvez fermer cette page.</p>"
         "</body></html>"
     )
+
+
+@csrf_exempt
+@require_POST
+def brevo_webhook_view(request, secret):
+    """
+    Vue publique appelée par Brevo (bounce, plainte spam...) pour chaque événement
+    lié aux emails envoyés. Protégée par un secret dans l'URL (Brevo ne signe pas
+    ses webhooks) plutôt que par l'authentification par token de l'API normale.
+    """
+    if not settings.BREVO_WEBHOOK_SECRET or secret != settings.BREVO_WEBHOOK_SECRET:
+        return HttpResponseForbidden("Secret invalide.")
+
+    try:
+        payload = json.loads(request.body or b"{}")
+    except ValueError:
+        return JsonResponse({"detail": "JSON invalide."}, status=400)
+
+    events = payload if isinstance(payload, list) else [payload]
+    results = [process_bounce_event(event) for event in events if isinstance(event, dict)]
+
+    return JsonResponse({"processed": results})

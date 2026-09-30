@@ -22,6 +22,7 @@ const MESSAGE_STATUS_LABEL = {
   QUEUED: "En attente d'envoi",
   SENT: 'Envoyé',
   FAILED: 'Échec',
+  BOUNCED: 'Rejeté (adresse invalide)',
   RECEIVED: 'Réponse reçue',
 };
 

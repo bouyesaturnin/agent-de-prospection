@@ -186,6 +186,9 @@ CELERY_TASK_PUBLISH_RETRY = False
 BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
 BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', '')
 BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Agent de Prospection')
+# Secret dans l'URL du webhook Brevo (bounces/plaintes) : Brevo ne signe pas ses
+# webhooks, ce secret fait office de protection contre les appels non légitimes.
+BREVO_WEBHOOK_SECRET = os.getenv('BREVO_WEBHOOK_SECRET', '')
 
 # URL publique du backend, utilisée pour générer le lien de désinscription dans les emails
 PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://127.0.0.1:8000')

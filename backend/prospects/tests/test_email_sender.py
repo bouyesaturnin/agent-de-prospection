@@ -12,6 +12,7 @@ def fake_response(status_code, text=''):
     resp = MagicMock()
     resp.status_code = status_code
     resp.text = text
+    resp.json.return_value = {'messageId': '<test-message-id@smtp-relay.mailin.fr>'}
     if status_code >= 300:
         resp.raise_for_status.side_effect = requests.HTTPError(f"{status_code} error")
     return resp
@@ -38,6 +39,7 @@ class SendMessageViaBrevoTests(TestCase):
         self.lead.refresh_from_db()
         self.assertEqual(self.message.status, 'SENT')
         self.assertIsNotNone(self.message.sent_at)
+        self.assertEqual(self.message.brevo_message_id, '<test-message-id@smtp-relay.mailin.fr>')
         self.assertEqual(self.lead.status, 'CONTACTED')
         self.assertTrue(AgentLog.objects.filter(action='EMAIL_SENT', lead=self.lead).exists())
 

@@ -83,9 +83,15 @@ def send_message_via_brevo(message: Message) -> None:
         )
         response.raise_for_status()
 
+    try:
+        brevo_message_id = response.json().get('messageId', '')
+    except ValueError:
+        brevo_message_id = ''
+
     message.status = 'SENT'
     message.sent_at = timezone.now()
-    message.save(update_fields=['status', 'sent_at'])
+    message.brevo_message_id = brevo_message_id
+    message.save(update_fields=['status', 'sent_at', 'brevo_message_id'])
 
     lead.status = 'CONTACTED'
     lead.save(update_fields=['status'])

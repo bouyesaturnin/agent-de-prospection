@@ -7,6 +7,7 @@ from .views import (
     AgentLogViewSet,
     DiscoveredProspectViewSet,
     unsubscribe_view,
+    brevo_webhook_view,
 )
 from .auth_views import login_view, logout_view, me_view
 
@@ -19,6 +20,7 @@ router.register(r'discovered-prospects', DiscoveredProspectViewSet, basename='di
 
 urlpatterns = [
     path('unsubscribe/<uuid:lead_id>/', unsubscribe_view, name='unsubscribe'),
+    path('webhooks/brevo/<str:secret>/', brevo_webhook_view, name='brevo-webhook'),
     path('auth/login/', login_view, name='auth-login'),
     path('auth/logout/', logout_view, name='auth-logout'),
     path('auth/me/', me_view, name='auth-me'),

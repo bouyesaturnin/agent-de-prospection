@@ -121,12 +121,13 @@ class Message(models.Model):
         ('QUEUED', 'En attente d\'envoi'),
         ('SENT', 'Envoyé'),
         ('FAILED', 'Échec de l\'envoi'),
+        ('BOUNCED', 'Rejeté par le serveur destinataire'),
         ('RECEIVED', 'Réponse reçue du prospect'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='messages')
-    
+
     msg_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='EMAIL')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
 
@@ -136,6 +137,10 @@ class Message(models.Model):
     # Méta-informations d'envoi et d'IA
     generated_by_ai = models.BooleanField(default=True, verbose_name="Généré par l'IA")
     sent_at = models.DateTimeField(null=True, blank=True)
+    brevo_message_id = models.CharField(
+        max_length=255, blank=True,
+        help_text="Identifiant renvoyé par Brevo à l'envoi, utilisé pour recouper les événements du webhook (bounce, spam).",
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
