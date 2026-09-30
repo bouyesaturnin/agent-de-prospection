@@ -192,6 +192,8 @@ BREVO_WEBHOOK_SECRET = os.getenv('BREVO_WEBHOOK_SECRET', '')
 
 # URL publique du backend, utilisée pour générer le lien de désinscription dans les emails
 PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://127.0.0.1:8000')
+# URL publique du frontend, utilisée pour le lien vers la politique de confidentialité dans les emails
+PUBLIC_FRONTEND_URL = os.getenv('PUBLIC_FRONTEND_URL', 'http://127.0.0.1:5173')
 
 # Détection des réponses par relevé IMAP de la boîte de réception
 IMAP_HOST = os.getenv('IMAP_HOST', '')

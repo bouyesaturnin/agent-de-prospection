@@ -52,6 +52,16 @@ class SendMessageViaBrevoTests(TestCase):
         sent_payload = mock_post.call_args.kwargs['json']
         self.assertIn(f"/api/unsubscribe/{self.lead.id}/", sent_payload['textContent'])
 
+    @override_settings(PUBLIC_FRONTEND_URL='http://testfrontend')
+    @patch('prospects.services.email_sender.requests.post')
+    def test_privacy_policy_link_included_in_body(self, mock_post):
+        mock_post.return_value = fake_response(201)
+
+        send_message_via_brevo(self.message)
+
+        sent_payload = mock_post.call_args.kwargs['json']
+        self.assertIn('http://testfrontend/confidentialite', sent_payload['textContent'])
+
     @override_settings(IMAP_USERNAME='inbox@example.com')
     @patch('prospects.services.email_sender.requests.post')
     def test_reply_to_points_to_monitored_mailbox(self, mock_post):

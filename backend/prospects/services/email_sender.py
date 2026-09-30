@@ -9,10 +9,12 @@ BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 def _unsubscribe_footer(lead) -> str:
     unsubscribe_url = f"{settings.PUBLIC_BACKEND_URL}/api/unsubscribe/{lead.id}/"
+    privacy_url = f"{settings.PUBLIC_FRONTEND_URL}/confidentialite"
     return (
         "\n\n---\n"
         "Vous recevez cet email dans le cadre d'une démarche de prospection commerciale.\n"
-        f"Pour ne plus recevoir de message de notre part : {unsubscribe_url}"
+        f"Pour ne plus recevoir de message de notre part : {unsubscribe_url}\n"
+        f"Politique de confidentialité : {privacy_url}"
     )
 
 

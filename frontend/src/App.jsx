@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
 import ProspectFinder from './pages/ProspectFinder';
+import LegalNotice from './pages/LegalNotice';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="login" element={<Login />} />
+          <Route path="mentions-legales" element={<LegalNotice />} />
+          <Route path="confidentialite" element={<PrivacyPolicy />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
