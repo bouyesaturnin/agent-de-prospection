@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
 import ProspectFinder from './pages/ProspectFinder';
+import Stats from './pages/Stats';
 import LegalNotice from './pages/LegalNotice';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
@@ -22,6 +23,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="discovery" element={<ProspectFinder />} />
+              <Route path="stats" element={<Stats />} />
             </Route>
           </Route>
         </Routes>

@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from kombu.exceptions import OperationalError
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
@@ -29,6 +29,7 @@ from .services.reply_checker import check_replies
 from .services.followup_manager import process_followups
 from .services.prospect_finder import search_businesses_without_website
 from .services.bounce_handler import process_bounce_event
+from .services.stats import compute_stats
 from .tasks import task_generate_ai_message, task_send_message
 
 
@@ -354,6 +355,15 @@ class AgentLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = AgentLog.objects.all()
     serializer_class = AgentLogSerializer
+
+
+@api_view(['GET'])
+def stats_view(request):
+    """
+    Statistiques agrégées (entonnoir de conversion, taux de réponse/qualification/
+    bounce, emails envoyés par jour, détail par campagne) pour la page Statistiques.
+    """
+    return Response(compute_stats())
 
 
 @require_GET

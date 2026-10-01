@@ -9,6 +9,7 @@ from .views import (
     unsubscribe_view,
     brevo_webhook_view,
     health_view,
+    stats_view,
 )
 from .auth_views import login_view, logout_view, me_view
 
@@ -23,6 +24,7 @@ urlpatterns = [
     path('unsubscribe/<uuid:lead_id>/', unsubscribe_view, name='unsubscribe'),
     path('webhooks/brevo/<str:secret>/', brevo_webhook_view, name='brevo-webhook'),
     path('health/', health_view, name='health'),
+    path('stats/', stats_view, name='stats'),
     path('auth/login/', login_view, name='auth-login'),
     path('auth/logout/', logout_view, name='auth-logout'),
     path('auth/me/', me_view, name='auth-me'),

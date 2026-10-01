@@ -1,13 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Megaphone, Mail, ScrollText, Sparkles, LogOut, Search } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Mail, BarChart3, Sparkles, LogOut, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/' },
   { label: 'Campagnes', icon: Megaphone, to: '/campaigns' },
   { label: 'Recherche de prospects', icon: Search, to: '/discovery' },
+  { label: 'Statistiques', icon: BarChart3, to: '/stats' },
   { label: 'Messages', icon: Mail, to: null },
-  { label: 'Journaux', icon: ScrollText, to: null },
 ];
 
 export default function Sidebar() {

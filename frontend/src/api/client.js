@@ -72,6 +72,9 @@ export const updateMessage = (messageId, payload) => apiClient.patch(`/messages/
 // Journaux
 export const getLogs = (params) => apiClient.get('/logs/', { params });
 
+// Statistiques
+export const getStats = () => apiClient.get('/stats/');
+
 // Recherche de prospects (Google Places)
 export const getDiscoveredProspects = (params) => apiClient.get('/discovered-prospects/', { params });
 export const searchProspects = (query, location) =>
