@@ -6,6 +6,8 @@ from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
+from django.db import connection
+from django.db.utils import OperationalError as DatabaseOperationalError
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
@@ -352,6 +354,29 @@ class AgentLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = AgentLog.objects.all()
     serializer_class = AgentLogSerializer
+
+
+@require_GET
+def health_view(request):
+    """
+    Vue publique de supervision (pensée pour un moniteur externe type
+    UptimeRobot/healthchecks.io) : renvoie 200 si la base de données et le
+    broker Celery (Redis) sont joignables, 503 sinon. Volontairement sans
+    authentification pour qu'un service externe puisse l'appeler.
+    """
+    try:
+        connection.ensure_connection()
+        database_ok = True
+    except DatabaseOperationalError:
+        database_ok = False
+
+    broker_ok = _broker_reachable()
+    healthy = database_ok and broker_ok
+
+    return JsonResponse(
+        {'status': 'ok' if healthy else 'degraded', 'database': database_ok, 'broker': broker_ok},
+        status=200 if healthy else 503,
+    )
 
 
 @require_GET

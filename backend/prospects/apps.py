@@ -4,3 +4,6 @@ from django.apps import AppConfig
 class ProspectsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'prospects'
+
+    def ready(self):
+        from . import signals  # noqa: F401

@@ -189,6 +189,10 @@ BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Agent de Prospection')
 # Secret dans l'URL du webhook Brevo (bounces/plaintes) : Brevo ne signe pas ses
 # webhooks, ce secret fait office de protection contre les appels non légitimes.
 BREVO_WEBHOOK_SECRET = os.getenv('BREVO_WEBHOOK_SECRET', '')
+# Email prévenu automatiquement en cas d'erreur journalisée par l'agent (échec
+# d'envoi, bounce définitif, plainte spam...). Laisser vide désactive l'alerte
+# (c'est le cas par défaut en local/tests, pour ne jamais appeler Brevo pour de vrai).
+ADMIN_ALERT_EMAIL = os.getenv('ADMIN_ALERT_EMAIL', '')
 
 # URL publique du backend, utilisée pour générer le lien de désinscription dans les emails
 PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://127.0.0.1:8000')
