@@ -56,5 +56,11 @@ lint et du build du frontend.
 
 ## Déploiement
 
-Le backend (Railway) et le frontend (Vercel) sont tous les deux connectés au dépôt
-GitHub : un `git push` sur `main` redéploie automatiquement les deux.
+Le backend (3 services Railway : `backend-web`, `backend-worker`, `backend-beat`) et le
+frontend (Vercel) sont tous connectés au dépôt GitHub : un `git push` sur `main`
+redéploie automatiquement les quatre. Si un service reste bloqué sur un ancien commit
+malgré le push, forcer un déploiement direct depuis le dossier `backend/` :
+
+```bash
+railway up --service backend-worker --detach
+```
