@@ -122,9 +122,12 @@ export default function Stats() {
           {messagesPerDay.length === 0 ? (
             <p className="mt-4 text-center text-xs text-slate-400">Aucun email envoyé sur cette période.</p>
           ) : (
-            <div className="mt-4 flex h-40 items-end gap-1.5 overflow-x-auto pb-1">
+            <div className="mt-4 flex h-40 items-stretch gap-1.5 overflow-x-auto pb-1">
               {messagesPerDay.map((d) => (
-                <div key={d.date} className="flex min-w-[28px] flex-1 flex-col items-center gap-1">
+                <div
+                  key={d.date}
+                  className="flex h-full min-w-7 flex-1 flex-col items-center justify-end gap-1"
+                >
                   <span className="text-[10px] font-semibold text-slate-600">{d.sent}</span>
                   <div
                     className="w-full rounded-t-md bg-brand-500"
